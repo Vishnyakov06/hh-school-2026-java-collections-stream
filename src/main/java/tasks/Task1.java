@@ -33,7 +33,7 @@ public class Task1 {
   }
   public List<Person> findOrderedPersons(List<Integer> personIds) {
     Set<Person> persons = personService.findPersons(personIds);
-    return personIds.stream().map(x->findPersonById(persons,x)).toList();
+    return personIds.stream().map(x->findPersonById(persons,x)).collect(Collectors.toList());
   }
   private Person findPersonById(Set<Person> persons,Integer id){
     return persons.stream()
