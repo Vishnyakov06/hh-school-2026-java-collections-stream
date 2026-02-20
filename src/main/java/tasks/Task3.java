@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 public class Task3 {
 
   public static List<Person> sort(Collection<Person> persons) {
-    Comparator<Person> comparator = Comparator.comparing(Person::firstName)
-            .thenComparing(Person::secondName)
+    Comparator<Person> comparator = Comparator.comparing(Person::secondName)
+            .thenComparing(Person::firstName)
             .thenComparing(Person::createdAt);
     return persons.stream().
             sorted(comparator).
