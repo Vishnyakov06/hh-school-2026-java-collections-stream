@@ -12,6 +12,12 @@ import java.util.stream.Collectors;
 public class Task3 {
 
   public static List<Person> sort(Collection<Person> persons) {
+    /*Throws: NullPointerException – if the argument is null(comment into docs)
+    про null поля ничего не оговаривалось, поэтому оставил так
+    вообще из бизнес логики, вряд ли можно оставить пустыми поля имени фамилии, это же основа анкеты.
+    createdAt тоже не может быть null, ну конечно, если какой-то сторонний сервис по определению времени регистрации
+     работает верно
+     */
     Comparator<Person> comparator = Comparator.comparing(Person::secondName)
             .thenComparing(Person::firstName)
             .thenComparing(Person::createdAt);
