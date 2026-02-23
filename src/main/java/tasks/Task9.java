@@ -1,14 +1,8 @@
 package tasks;
 
 import common.Person;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -25,65 +19,85 @@ public class Task9 {
 
   // Костыль, эластик всегда выдает в топе "фальшивую персону".
   // Конвертируем начиная со второй
-  public List<String> getNames(List<Person> persons) {
-    if (persons.size() == 0) {
-      return Collections.emptyList();
-    }
-    persons.remove(0);
-    return persons.stream().map(Person::firstName).collect(Collectors.toList());
+  /*
+      Проверка на null, вдруг ничего не передали, а мы как-то с этим объектом работаем.
+      Заменили прямую проверку на отсутствие элементов вызовом специализированного под эту операцию метод,
+      что выглядит более лаконично что ли (ну это кому как)
+      Сначала думал, как-то может изменить входной список, вообще задавался вопросом, что в данном случае костыль нормальная практика,
+      так как не наша проблема, что пришел не корректный список, но потом подумал что можно не удалять первый элемент,
+      что вредит производительности, так как придется весь список смещать назад, это O(n), вариант просто пропускать в итерации
+      этот первый некорректный элемент.
+   */
+  public List<String> getNames(List<Person> persons){
+    return getNamesStream(persons).collect(Collectors.toList());
   }
 
   // Зачем-то нужны различные имена этих же персон (без учета фальшивой разумеется)
+  /*
+      Приступив к этому методу, было понятно что лучше надо убрать distinict, так как и так в set записывали
+      была проблема с тем что мы обращаемся к getNames получаем список с пропущенной первой строчкой, то есть прошлись за O(n)
+      Где n размер листа, а затем пройтись еще раз же по нему, но добавляя в set, O(n-1), ну в биг о нотации имеем O(2n)
+      я решил переписать то что было в getNames в метод getDifferentNames, чтобы после прохода и скипа 1 строки сразу бы преобразовывали
+      в set, но тогда был в тупую повторенный код, решил придержаться чистоте кода и не повторится тем самым DRY соблюли))
+      и того O(n)
+   */
   public Set<String> getDifferentNames(List<Person> persons) {
-    return getNames(persons).stream().distinct().collect(Collectors.toSet());
+    return getNamesStream(persons).collect(Collectors.toSet());
+  }
+  private Stream<String> getNamesStream(List<Person> persons){
+    if(persons==null || persons.isEmpty()){
+      return Stream.empty();
+    }
+    return persons.stream()
+            .skip(1)
+            .map(Person::firstName);
   }
 
   // Тут фронтовая логика, делаем за них работу - склеиваем ФИО
+  /*
+      Была некрасивая цепочка условных операторов, заменили на проверку через Objects.nonNull
+      добавили терминальную операцию joining для преобразования строки к нужному формату
+   */
   public String convertPersonToString(Person person) {
-    String result = "";
-    if (person.secondName() != null) {
-      result += person.secondName();
-    }
-
-    if (person.firstName() != null) {
-      result += " " + person.firstName();
-    }
-
-    if (person.secondName() != null) {
-      result += " " + person.secondName();
-    }
-    return result;
+    return Stream.of(person.secondName(),
+                    person.firstName(),
+                    person.middleName()
+            )
+            .filter(field->Objects.nonNull(field))
+            .collect(Collectors.joining(" "));
   }
 
   // словарь id персоны -> ее имя
+  /*
+  с помощью перегрузки метода toMap, который принимает 3 параметром стратегию выбора элемента при повторном ключе,
+  получаем аналогичный способ избегания добавления дубликата.
+   */
   public Map<Integer, String> getPersonNames(Collection<Person> persons) {
-    Map<Integer, String> map = new HashMap<>(1);
-    for (Person person : persons) {
-      if (!map.containsKey(person.id())) {
-        map.put(person.id(), convertPersonToString(person));
-      }
-    }
-    return map;
+    return persons.stream()
+            .collect(Collectors.toMap(Person::id,this::convertPersonToString,
+                    (oldKey,newKey ) -> oldKey));
   }
 
   // есть ли совпадающие в двух коллекциях персоны?
+  /*
+  первое что пришло в голову пересечь коллекции с помощью retainsAll
+  но если бы это были бы ArrayList, то это те же O(n^2)
+  подумал что можно бы одну коллекцию преобразовать в множество, для быстрого поиска по ключу
+  тем самым создание множества O(n), доступ по ключу для проверки O(1) и проход по второй коллекции O(m)
+  с помощью anyMatch выходим сразу же при обнаружении тем самым сокращаем обход второй коллекции, но в худшем случае все так же O(n)
+   */
   public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
-    boolean has = false;
-    for (Person person1 : persons1) {
-      for (Person person2 : persons2) {
-        if (person1.equals(person2)) {
-          has = true;
-        }
-      }
-    }
-    return has;
+    Set<Person> persons1ToSet = new HashSet<>(persons1.size());
+    persons1ToSet.stream().collect(Collectors.toSet());
+    return persons2.stream().anyMatch(persons1ToSet::contains);
   }
 
   // Посчитать число четных чисел
+  /*
+  подсчет в одном потоке + добавил битовый сдвиг, по идеи должно быть быстрее, чем %
+   */
   public long countEven(Stream<Integer> numbers) {
-    count = 0;
-    numbers.filter(num -> num % 2 == 0).forEach(num -> count++);
-    return count;
+    return numbers.filter(num -> (num & 1) == 0).count();
   }
 
   // Загадка - объясните почему assert тут всегда верен
@@ -95,4 +109,12 @@ public class Task9 {
     Set<Integer> set = new HashSet<>(integers);
     assert snapshot.toString().equals(set.toString());
   }
+  /*
+  вроде бы если ключом у нас является integer, то hashCode вернет само число,
+  hashSet под капотом hashMap а значит использует бакеты, номер бакеты вычисляется как hachCode%кол-во бакетов,
+  у нас бакетов будет больше 10к в силу расширения 2^14 вроде, а значит любое число меньшее 2^14 при mod даст само себя
+  значит элементы будут сидеть ровно в тех бакетах по индексу, чему равны сами ключи элементов, поэтому когда мы пойдем обходить
+  через toString который определен в AbstractCollection как обычный перебор подряд коллекции, то мы просто будет итерироваться
+  от бакета к бакету, то есть от 1-10к
+   */
 }
