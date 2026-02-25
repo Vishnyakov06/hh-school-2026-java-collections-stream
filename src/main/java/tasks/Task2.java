@@ -19,10 +19,7 @@ public class Task2 {
   public static List<Person> combineAndSortWithLimit(Collection<Person> persons1,
                                                      Collection<Person> persons2,
                                                      int limit) {
-    List<Person> result = new ArrayList<>();
-      result.addAll(persons1);
-      result.addAll(persons2);
-      return result.stream()
+      return Stream.concat(persons1.stream(),persons2.stream())
               .sorted(Comparator.comparing(Person::createdAt))
               .limit(limit)
               .collect(Collectors.toList());

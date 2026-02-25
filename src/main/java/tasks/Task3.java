@@ -18,11 +18,10 @@ public class Task3 {
     createdAt тоже не может быть null, ну конечно, если какой-то сторонний сервис по определению времени регистрации
      работает верно
      */
-    Comparator<Person> comparator = Comparator.comparing(Person::secondName)
-            .thenComparing(Person::firstName)
-            .thenComparing(Person::createdAt);
     return persons.stream().
-            sorted(comparator).
-            collect(Collectors.toList());
+            sorted(Comparator.comparing(Person::secondName)
+                    .thenComparing(Person::firstName)
+                    .thenComparing(Person::createdAt))
+            .collect(Collectors.toList());
   }
 }

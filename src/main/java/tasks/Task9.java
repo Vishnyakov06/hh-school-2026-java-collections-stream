@@ -88,7 +88,6 @@ public class Task9 {
    */
   public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
     Set<Person> persons1ToSet = new HashSet<>(persons1.size());
-    persons1ToSet.stream().collect(Collectors.toSet());
     return persons2.stream().anyMatch(persons1ToSet::contains);
   }
 
