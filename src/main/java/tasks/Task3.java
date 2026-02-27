@@ -1,9 +1,9 @@
 package tasks;
 
 import common.Person;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /*
 Задача 3
@@ -12,6 +12,16 @@ import java.util.List;
 public class Task3 {
 
   public static List<Person> sort(Collection<Person> persons) {
-    return new ArrayList<>(persons);
+    /*Throws: NullPointerException – if the argument is null(comment into docs)
+    про null поля ничего не оговаривалось, поэтому оставил так
+    вообще из бизнес логики, вряд ли можно оставить пустыми поля имени фамилии, это же основа анкеты.
+    createdAt тоже не может быть null, ну конечно, если какой-то сторонний сервис по определению времени регистрации
+     работает верно
+     */
+    return persons.stream().
+            sorted(Comparator.comparing(Person::secondName)
+                    .thenComparing(Person::firstName)
+                    .thenComparing(Person::createdAt))
+            .collect(Collectors.toList());
   }
 }
